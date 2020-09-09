@@ -1,10 +1,7 @@
 <?php
 /**
- *  DB - A simple database class 
+ *  DB - A simple database class
  *
- * @author		Author: Vivek Wicky Aswal. (https://twitter.com/#!/VivekWickyAswal)
- * @git 		https://github.com/indieteq/PHP-MySQL-PDO-Database-Class
- * @version      0.2ab
  *
  */
 require("Log.class.php");
@@ -22,14 +19,14 @@ class DB
     # @bool ,  Connected to the database
     private $bConnected = false;
     
-    # @object, Object for logging exceptions	
+    # @object, Object for logging exceptions
     private $log;
     
     # @array, The parameters of the SQL query
     private $parameters;
     
     /**
-     *   Default Constructor 
+     *   Default Constructor
      *
      *	1. Instantiate Log class.
      *	2. Connect to database.
@@ -44,15 +41,15 @@ class DB
     
     /**
      *	This method makes connection to the database.
-     *	
-     *	1. Reads the database settings from a ini file. 
+     *
+     *	1. Reads the database settings from a ini file.
      *	2. Puts  the ini content into the settings array.
      *	3. Tries to connect to the database.
      *	4. If connection failed, exception is displayed and a log file gets created.
      */
     private function Connect()
     {
-        $this->settings = parse_ini_file("settings.ini.php");
+        $this->settings = parse_ini_file("settingss.php");
         $dsn            = 'mysql:dbname=' . $this->settings["dbname"] . ';host=' . $this->settings["host"] . '';
         try {
             # Read settings from INI file, set UTF8
@@ -60,7 +57,7 @@ class DB
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
             ));
             
-            # We can now log any exceptions on Fatal error. 
+            # We can now log any exceptions on Fatal error.
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
             # Disable emulation of prepared statements, use REAL prepared statements instead.
@@ -68,8 +65,7 @@ class DB
             
             # Connection succeeded, set the boolean to true.
             $this->bConnected = true;
-        }
-        catch (PDOException $e) {
+        } catch (PDOException $e) {
             # Write into log
             echo $this->ExceptionLog($e->getMessage());
             die();
@@ -88,11 +84,11 @@ class DB
     
     /**
      *	Every method which needs to execute a SQL query uses this method.
-     *	
+     *
      *	1. If not connected, connect to the database.
      *	2. Prepare Query.
      *	3. Parameterize Query.
-     *	4. Execute Query.	
+     *	4. Execute Query.
      *	5. On exception : Write Exception into the log + SQL query.
      *	6. Reset the Parameters.
      */
@@ -106,13 +102,12 @@ class DB
             # Prepare query
             $this->sQuery = $this->pdo->prepare($query);
             
-            # Add parameters to the parameter array	
+            # Add parameters to the parameter array
             $this->bindMore($parameters);
             
             # Bind parameters
             if (!empty($this->parameters)) {
                 foreach ($this->parameters as $param => $value) {
-                    
                     $type = PDO::PARAM_STR;
                     switch ($value[1]) {
                         case is_int($value[1]):
@@ -130,10 +125,9 @@ class DB
                 }
             }
             
-            # Execute SQL 
+            # Execute SQL
             $this->sQuery->execute();
-        }
-        catch (PDOException $e) {
+        } catch (PDOException $e) {
             # Write into log and display Exception
             echo $this->ExceptionLog($e->getMessage(), $query);
             die();
@@ -144,11 +138,11 @@ class DB
     }
     
     /**
-     *	@void 
+     *	@void
      *
      *	Add the parameter to the parameter array
-     *	@param string $para  
-     *	@param string $value 
+     *	@param string $para
+     *	@param string $value
      */
     public function bind($para, $value)
     {
@@ -156,7 +150,7 @@ class DB
     }
     /**
      *	@void
-     *	
+     *
      *	Add more parameters to the parameter array
      *	@param array $parray
      */
@@ -186,7 +180,7 @@ class DB
         
         $rawStatement = explode(" ", preg_replace("/\s+|\t+|\n+/", " ", $query));
         
-        # Which SQL statement is used 
+        # Which SQL statement is used
         $statement = strtolower($rawStatement[0]);
         
         if ($statement === 'select' || $statement === 'show') {
@@ -194,11 +188,11 @@ class DB
         } elseif ($statement === 'insert' || $statement === 'update' || $statement === 'delete') {
             return $this->sQuery->rowCount();
         } else {
-            return NULL;
+            return null;
         }
     }
     
-    public function insert($tablename,$datas, $params = null, $fetchmode = PDO::FETCH_ASSOC)
+    public function insert($tablename, $datas, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
         $datas_ins = array();
         foreach ($datas as $key => $value) {
@@ -216,12 +210,14 @@ class DB
         return $this->sQuery->rowCount();
     }
     
-    public function update($tablename,$datas,$wherestr, $params = null, $fetchmode = PDO::FETCH_ASSOC)
+    public function update($tablename, $datas, $wherestr, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
         $query = 'update '.$tablename.' set ';
         $i = 0;
         foreach ($datas as $key => $value) {
-            if ($i > 0) $query .= ', ';
+            if ($i > 0) {
+                $query .= ', ';
+            }
             $query .= ' '.$key.'=\''.str_replace("'", "\'", trim($value)).'\' ';//str_replace("'", "\'", $value);
 
             $i++;
@@ -272,7 +268,7 @@ class DB
     }
     
     /**
-     *	Returns an array which represents a column from the result set 
+     *	Returns an array which represents a column from the result set
      *
      *	@param  string $query
      *	@param  array  $params
@@ -290,10 +286,9 @@ class DB
         }
         
         return $column;
-        
     }
     /**
-     *	Returns an array which represents a row from the result set 
+     *	Returns an array which represents a row from the result set
      *
      *	@param  string $query
      *	@param  array  $params
@@ -321,7 +316,7 @@ class DB
         $this->sQuery->closeCursor(); // Frees up the connection to the server so that other SQL statements may be issued
         return $result;
     }
-    /**	
+    /**
      * Writes the log and returns the exception
      *
      * @param  string $message
@@ -344,4 +339,3 @@ class DB
         return $exception;
     }
 }
-?>
